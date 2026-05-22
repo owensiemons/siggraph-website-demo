@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 
 export default function ShaderBackground() {
   const mountRef = useRef(null)
@@ -8,17 +11,50 @@ export default function ShaderBackground() {
     const mount = mountRef.current
     const renderer = new THREE.WebGLRenderer()
     renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace
+    renderer.toneMapping = THREE.NoToneMapping
+    renderer.setClearColor(0x000000, 1)
     mount.appendChild(renderer.domElement)
+    
 
     const scene = new THREE.Scene()
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
-
     const geometry = new THREE.PlaneGeometry(2, 2)
+
+    const composer = new EffectComposer(renderer)
+
+    const renderPass = new RenderPass(scene, camera)
+    composer.addPass(renderPass)
+
+    const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.065, // strength
+    0.1, // radius
+    0.2 // threshold
+    )
+
+    composer.addPass(bloomPass)
+
+    const aspect = window.innerWidth / window.innerHeight
+    const minB = new THREE.Vector2(-aspect * 0.5, -0.5)
+    const maxB = new THREE.Vector2( aspect * 0.5,  0.5)
+
+    const balls = [
+      { pos: new THREE.Vector2( 0.3,  0.3), vel: new THREE.Vector2( 0.1,  0.2) },
+      { pos: new THREE.Vector2( 0.0,  0.3), vel: new THREE.Vector2( 0.1, -0.2) },
+      { pos: new THREE.Vector2(-0.2,  0.3), vel: new THREE.Vector2(-0.3, -0.1) },
+      { pos: new THREE.Vector2( 0.1, -0.2), vel: new THREE.Vector2(-0.5,  0.3) },
+    ]
+
     const material = new THREE.ShaderMaterial({
       uniforms: {
-        uTime:       { value: 0 },
-        uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-        uMouse:      { value: new THREE.Vector4(0, 0, 0, 0) }, // xy = pos, z = isDown
+        uTime:      { value: 0 },
+        uResolution:{ value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+        uMouse:     { value: new THREE.Vector2(0, 0) },
+        uBall1Pos:  { value: new THREE.Vector2() },
+        uBall2Pos:  { value: new THREE.Vector2() },
+        uBall3Pos:  { value: new THREE.Vector2() },  // was missing
+        uBall4Pos:  { value: new THREE.Vector2() },  // was missing
       },
       vertexShader: `
         void main() {
@@ -28,92 +64,56 @@ export default function ShaderBackground() {
       fragmentShader: `
         uniform float uTime;
         uniform vec2 uResolution;
-        uniform vec4 uMouse;
+        uniform vec2 uMouse;
+        uniform vec2 uBall1Pos;
+        uniform vec2 uBall2Pos;
+        uniform vec2 uBall3Pos;
+        uniform vec2 uBall4Pos;
 
-        #define epsilon 0.001
-        #define step_size 0.005
+        #define warp 0.0
+        #define scan 0.5
 
-        float hash(vec2 p) {
-            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-        }
-
-        vec3 bezier(vec3 start, vec3 mid, vec3 end, float t) {
-            vec3 l1 = mix(start, mid, t);
-            vec3 l2 = mix(mid,   end, t);
-            return mix(l1, l2, t);
+        float smin(float a, float b, float k) {
+            k *= 4.0;
+            float h = max(k - abs(a - b), 0.0) / k;
+            return min(a, b) - h*h*k*(1.0/4.0);
         }
 
         float sdfSphere(vec3 p, vec3 center, float rad) {
-            return length(center - p) - rad;
+            return length(p - center) - rad;
         }
 
         float map(vec3 p) {
-            float s1 = sdfSphere(p, vec3(0.2, 0, 0), 0.2);
-            float s2 = sdfSphere(p, vec3(0.5, 0.1, -0.2), 0.15);
-            float s3 = sdfSphere(p, vec3(-0.4, -0.2, 0), 0.25);
-            float s4 = sdfSphere(p, vec3(0, -10e2 - 1.0, 0), 10e2);
-            return min(s4, min(s1, min(s2, s3)));
-        }
-
-        vec3 estimateNormal(vec3 p) {
-            return normalize(vec3(
-                map(vec3(p.x + epsilon, p.y, p.z)) - map(vec3(p.x - epsilon, p.y, p.z)),
-                map(vec3(p.x, p.y + epsilon, p.z)) - map(vec3(p.x, p.y - epsilon, p.z)),
-                map(vec3(p.x, p.y, p.z + epsilon)) - map(vec3(p.x, p.y, p.z - epsilon))
-            ));
-        }
-
-        float ray_march(vec3 ro, vec3 rd, vec3 mid, vec3 end) {
-            float t = 0.0;
-            vec3 p = ro;
-            for (int i = 0; i < 612; i++) {
-                p = bezier(ro, mid, end, t);
-                float d = map(p);
-                if (d < epsilon) return t;
-                if (t > 15.0) return -1.0;
-                t += step_size;
-            }
-            return -1.0;
+            float s1 = sdfSphere(p, vec3(uBall1Pos, 0.0), 0.3);
+            float s2 = sdfSphere(p, vec3(uBall2Pos, 0.0), 0.25);
+            float s3 = sdfSphere(p, vec3(uBall3Pos, 0.0), 0.2);
+            float s4 = sdfSphere(p, vec3(uBall4Pos, 0.0), 0.4);
+            return smin(smin(s1, s2, 0.05), smin(s3, s4, 0.05), 0.05);
         }
 
         void main() {
-            vec2 fragCoord = gl_FragCoord.xy;
-            vec2 uv = (fragCoord - 0.5 * uResolution.xy) / uResolution.y;
+            float aspect = uResolution.x / uResolution.y;
+            vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution.xy) / uResolution.y;
+            vec2 dc = abs(uv / vec2(aspect, 1.0));
+            dc *= dc;
+            uv.x *= 1.0 + (dc.y * (0.3 * warp));
+            uv.y *= 1.0 + (dc.x * (0.4 * warp));
 
-            vec3 cam_pos = vec3(0, 0, -1);
-            vec3 cam_dir = vec3(0, 0, 1);
+            float d = map(vec3(uv, 0.0));
 
-            vec3 cam_right = normalize(cross(vec3(0, 1, 0), cam_dir));
-            vec3 cam_up = cross(cam_dir, cam_right);
-            mat3 look_at = mat3(cam_right, cam_up, cam_dir);
-
-            vec3 rd = normalize(look_at * normalize(vec3(uv.x, uv.y, 1.0)));
-
-            vec3 col = vec3(0.0);
-            vec3 mat_color = vec3(1.0, 0.0, 1.0);
-
-            vec3 end = cam_pos + 1.0 * rd;
-            vec3 mid = (cam_pos + end) / 2.0;
-            mid.x = mid.x * 2.0 * sin(uTime);
-            mid.y = mid.y * 2.0 * cos(uTime);
-
-            float t = ray_march(cam_pos, rd, mid, end);
-
-            if (t > 0.0) {
-                vec3 pos = bezier(cam_pos, mid, end, t);
-                vec3 light_pos = vec3(0.0, 0.3, 0.0);
-                vec3 light_norm = normalize(light_pos - pos);
-                vec3 hit_norm = estimateNormal(pos);
-                vec3 half_norm = normalize(light_norm - rd);
-
-                float ambient = 0.1;
-                float diffuse = max(0.0, dot(hit_norm, light_norm));
-                float specular = pow(max(0.0, dot(hit_norm, half_norm)), 8.0);
-
-                col = (ambient + diffuse) * mat_color + specular * vec3(1.0);
+            vec3 bg_col = vec3(0.1, 0.1, 0.1);
+            vec3 col = bg_col;
+            if (d < 0.0) {
+                float edge = smoothstep(0.0, 0.01, -d);
+                col = mix(bg_col, vec3(1.0, 0.5, 0.0), edge);
             }
 
-            gl_FragColor = vec4(col, 1.0);
+            if (uv.y > 0.5 || uv.y < -0.5 || uv.x < -aspect * 0.5 || uv.x > aspect * 0.5) {
+                gl_FragColor = vec4(bg_col, 1.0);
+            } else {
+                float apply = abs(sin(gl_FragCoord.y) * 0.5 * scan);
+                gl_FragColor = vec4(mix(col, vec3(0.0), apply), 1.0);
+            }
         }
       `
     })
@@ -121,37 +121,54 @@ export default function ShaderBackground() {
     const mesh = new THREE.Mesh(geometry, material)
     scene.add(mesh)
 
-    // Mouse tracking
     const onMouseMove = (e) => {
-      material.uniforms.uMouse.value.x = e.clientX
-      material.uniforms.uMouse.value.y = window.innerHeight - e.clientY // flip Y
+      material.uniforms.uMouse.value.x = ((e.clientX / window.innerWidth) - 0.5) * aspect
+      material.uniforms.uMouse.value.y = ((e.clientY / window.innerHeight) - 0.5) * -1
     }
-    const onMouseDown = () => { material.uniforms.uMouse.value.z = 1.0 }
-    const onMouseUp   = () => { material.uniforms.uMouse.value.z = 0.0 }
     window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mousedown', onMouseDown)
-    window.addEventListener('mouseup',   onMouseUp)
 
+    const dt = 1 / 240
     let animId
+
     const animate = () => {
       animId = requestAnimationFrame(animate)
-      material.uniforms.uTime.value += 0.01
-      renderer.render(scene, camera)
+
+      for (const ball of balls) {
+        const toMouse = material.uniforms.uMouse.value.clone().sub(ball.pos)
+        ball.vel.addScaledVector(toMouse, 0.75 * dt)
+        ball.pos.addScaledVector(ball.vel, dt)
+
+        if (ball.pos.x < minB.x || ball.pos.x > maxB.x) ball.vel.x *= -1.5 * Math.random()
+        if (ball.pos.y < minB.y || ball.pos.y > maxB.y) ball.vel.y *= -1.5 * Math.random()
+        ball.pos.clamp(minB, maxB)
+
+        if (ball.vel.length() > 1.0) ball.vel.normalize()
+      }
+
+      material.uniforms.uBall1Pos.value.copy(balls[0].pos)
+      material.uniforms.uBall2Pos.value.copy(balls[1].pos)
+      material.uniforms.uBall3Pos.value.copy(balls[2].pos)
+      material.uniforms.uBall4Pos.value.copy(balls[3].pos)
+      material.uniforms.uTime.value += dt
+      composer.render();
     }
     animate()
 
     const onResize = () => {
-      renderer.setSize(window.innerWidth, window.innerHeight)
-      material.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight)
+        renderer.setSize(window.innerWidth, window.innerHeight)
+        composer.setSize(window.innerWidth, window.innerHeight)
+
+        material.uniforms.uResolution.value.set(
+            window.innerWidth,
+            window.innerHeight
+        )
     }
     window.addEventListener('resize', onResize)
 
     return () => {
       cancelAnimationFrame(animId)
       window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mousedown', onMouseDown)
-      window.removeEventListener('mouseup',   onMouseUp)
-      window.removeEventListener('resize',    onResize)
+      window.removeEventListener('resize', onResize)
       mount.removeChild(renderer.domElement)
       renderer.dispose()
     }
