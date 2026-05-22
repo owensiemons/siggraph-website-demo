@@ -1,13 +1,12 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 :root {
-  --color-bg: #0a0a0f;
-  --color-accent: #00f0ff;
+  --color-bg: #22222d;
 }
+
 
 body {
   margin: 0;
   background: var(--color-bg);
   color: white;
-  font-family: sans-serif;
 }

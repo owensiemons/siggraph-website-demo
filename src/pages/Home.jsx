@@ -1,91 +1,68 @@
-import { useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import ParticleMesh from '../components/three/ParticleMesh'
 import './Home.css'
+import logo from '/ascii.txt?raw'
+import projImage from '/proj.png'
+import ShaderBackground from '../components/three/ShaderBackground'
 
 export default function Home() {
-  const navigate = useNavigate()
-  const headingRef = useRef(null)
-  const subRef = useRef(null)
-  const btnsRef = useRef(null)
-  const cardsRef = useRef(null)
-
-  useEffect(() => {
-    const els = [headingRef.current, subRef.current, btnsRef.current, cardsRef.current]
-    els.forEach((el, i) => {
-      if (!el) return
-      el.style.opacity = 0
-      el.style.transform = 'translateY(20px)'
-      setTimeout(() => {
-        el.style.transition = 'opacity 0.8s ease, transform 0.8s ease'
-        el.style.opacity = 1
-        el.style.transform = 'translateY(0)'
-      }, 300 + i * 160)
-    })
-  }, [])
-
   return (
     <div className="home">
-      <ParticleMesh />
+       <ShaderBackground />
+      <header className="ascii">
+        <pre>{logo}</pre>
+      </header>
+      <div className="layout">
 
-      <div className="hero__content">
-        <p className="eyebrow">ACM @ Illinois</p>
-        <h1 ref={headingRef} className="hero__title">
-          SIG<span className="accent">GRAPH</span>
-        </h1>
-        <p ref={subRef} className="hero__sub">
-          Computer graphics &amp; interactive techniques.<br />
-          Where art meets algorithm.
-        </p>
-        <div ref={btnsRef} className="hero__buttons">
-          <button className="btn btn--primary" onClick={() => navigate('/about')}>
-            About Us
-          </button>
-          <button className="btn btn--ghost" onClick={() => navigate('/projects')}>
-            Projects
-          </button>
+        <div className="left-col">
+          <div className="box">
+            <h2>Navigation</h2>
+            <table>
+              <tr><td>Home</td></tr>
+              <tr><td>Projects</td></tr>
+              <tr><td>Resources</td></tr>
+              <tr><td>About</td></tr>
+            </table>
+          </div>
+          <div className="box">
+            <h2>Links</h2>
+            <table>
+              <tr><td>Discord</td></tr>
+              <tr><td>Mail</td></tr>
+              <tr><td>Instagram</td></tr>
+            </table>
+          </div>
         </div>
-      </div>
+        
 
-      <div ref={cardsRef} className="cards">
-
-        <div className="card meetings">
-          <p className="card__label">// when we meet</p>
-          <h2 className="card__heading">Meeting Times</h2>
-          <div className="meeting-slot">
-            <span className="meeting-slot__day">DAY</span>
-            <div className="meeting-slot__details">
-              <span className="meeting-slot__time">00:00 – 00:00 PM</span>
-              <span className="meeting-slot__loc">Location TBD</span>
-            </div>
-          </div>
-          <div className="meeting-slot">
-            <span className="meeting-slot__day">DAY</span>
-            <div className="meeting-slot__details">
-              <span className="meeting-slot__time">00:00 – 00:00 PM</span>
-              <span className="meeting-slot__loc">Location TBD</span>
-            </div>
-          </div>
-          <p className="meetings__note">
-            Open to everyone — no experience required.
+        <div className="box center">
+          <h2>Main Content</h2>
+          <p>Welcome to UIUC's chapter of ACM SIGGRAPH, the special interest group in computer graphics.<br></br>
+            Meetings every Sunday at 2 PM
           </p>
         </div>
 
-        <div className="card discord-card">
-          <p className="card__label">// join the conversation</p>
-          <h2 className="card__heading">Discord</h2>
-          <p className="discord-blurb">
-            Chat with members, get updates, and stay in the loop between meetings.
-          </p>
-          <a
-            className="btn btn--primary"
-            href="https://discord.gg/HZrRzgcT69"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Join Server ↗
-          </a>
+        <div className="right-col">
+          <div className="box">
+            <h2>Annoucements</h2>
+            <p>Next meeting in Siebel CS 999!</p>
+          </div>
+
+          <div className="box">
+            <h2>Latest Lecture</h2>
+            <table>
+              <tr><td>Topic</td></tr>
+              <tr><td>Slides</td></tr>
+              <tr><td>References</td></tr>
+            </table>
+          </div>
+
+          <div className="box">
+            <h2>Featured Project</h2>
+            <p>Volume Renderer</p>
+            <img src={projImage} alt="Featured Project" />
+            <p>Github</p>
+          </div>
         </div>
+
 
       </div>
     </div>
