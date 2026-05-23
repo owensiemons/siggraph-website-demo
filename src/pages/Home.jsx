@@ -1,7 +1,8 @@
 import './Home.css'
 import logo from '/ascii.txt?raw'
-import projImage from '/proj.png'
 import ShaderBackground from '../components/three/ShaderBackground'
+import siggraph from '/SIGGRAPH_01.png'
+import { Weight } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -34,10 +35,17 @@ export default function Home() {
         
 
         <div className="box center">
-          <h2>Main Content</h2>
-          <p>Welcome to UIUC's chapter of ACM SIGGRAPH, the special interest group in computer graphics.<br></br>
-            Meetings every Sunday at 2 PM
-          </p>
+          <h2>Welcome!</h2>
+          <p>Welcome to UIUC's chapter of ACM SIGGRAPH, the special interest group in computer graphics.</p>
+          <p className="smallHeader">Want to get involved?</p>
+
+          <p>Come to our meetings! We meet every Sunday at Siebel CS, 2 PM. Also, you can join our discord, which has more info.</p>
+
+          <p className="smallHeader">What we're up to:</p>
+
+          <p>A starling murmuration simulation</p>
+          <p>A medical volume renderer</p>
+          <p>A least squares physics simulation</p>
         </div>
 
         <div className="right-col">
@@ -56,10 +64,8 @@ export default function Home() {
           </div>
 
           <div className="box">
-            <h2>Featured Project</h2>
-            <p>Volume Renderer</p>
-            <img src={projImage} alt="Featured Project" />
-            <p>Github</p>
+            <h2>Empty</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam</p>
           </div>
         </div>
 

@@ -3,26 +3,19 @@
   max-width: 900px;
   margin: 0 auto;
   padding: 0 20px;
+  font-family: 'Terminal', Courier;
 }
 
-.layout {
-  display: grid;
-  grid-template-columns: 150px 1fr 220px;
-  gap: 5px 40px;
-  max-width: 900px;
-  margin: 0 auto;       
-  padding: 20px;
+.ascii pre {
+  font-weight: bolder;
+  color: white;
+  text-shadow:
+    0.3px 0 0 currentColor,
+    -0.3px 0 0 currentColor,
+    0 0.3px 0 currentColor,
+    0 -0.3px 0 currentColor;
 }
 
-.box {
-  background-color: #406895;  
-  border: 2px solid #000000;
-  border-radius: 5px;.ascii {
-  margin-top: 0;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
 .layout {
   display: grid;
   grid-template-columns: 150px 1fr 220px;
@@ -32,68 +25,60 @@
   padding: 20px;
   align-items: start;
 }
+
 .left-col, .right-col {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+
+.center {
+  grid-column: 2;
+}
+
 .box {
   background-color: #406895;
-  border: 2px solid #000000;
+  border: 1.5px solid #000000;
   border-radius: 5px;
   padding: 12px;
   margin-bottom: 12px;
 }
-.center {
-  grid-column: 2;
-}
+
 .box h2 {
-  background-color: #c88022;
+  background-color: #ef9606;
   border-bottom: 1px solid #000000;
   border-radius: 3px 3px 0px 0px;
-  color: white;
-  font-family: 'Courier New', monospace;
+  color: rgb(0, 0, 0);
+  font-family: 'Terminal', Courier, monospace;
   font-size: 14px;
   padding: 4px 8px;
   margin: -12px -12px 10px -12px;
   text-transform: uppercase;
-}
-td {
-  padding: 6px;
-}
-  padding: 12px;
-  margin-bottom: 12px;
-}
-
-.center {
-  grid-column: 2;
-  grid-row: 1 / span 2;   /* spans 2 rows, increase for more */
-}
-
-.box h2 {
-  background-color: #c88022;
-  border-bottom: 1px solid #000000;
-  border-radius: 3px 3px 0px 0px;
-  color: white;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  padding: 4px 8px;
-  margin: -12px -12px 10px -12px;
-  text-transform: uppercase;
-}
-
-td {
-  padding: 6px;
 }
 
 .box img {
-  width: 100%;
+  width: 30%;
   border-radius: 1px;
-  margin: 0px;
-  padding: 0px;
+  margin: 0;
+  padding: 0;
+}
+
+.box .smallHeader {
+  font-weight: bold;
+  padding: 10px;
 }
 
 .box p {
   margin: 0;
-  padding: 0;
+  padding: 7px;
+  font-family: 'Terminal', Courier;
+}
+
+table {
+  font-family: 'Terminal', Courier;
+  color: rgb(255, 255, 255);
+}
+
+td {
+  padding: 4px;
 }

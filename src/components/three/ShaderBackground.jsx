@@ -28,9 +28,9 @@ export default function ShaderBackground() {
 
     const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.065, // strength
-    0.1, // radius
-    0.2 // threshold
+    0.085, // strength
+    0.2, // radius
+    0.1 // threshold
     )
 
     composer.addPass(bloomPass)
@@ -39,12 +39,29 @@ export default function ShaderBackground() {
     const minB = new THREE.Vector2(-aspect * 0.5, -0.5)
     const maxB = new THREE.Vector2( aspect * 0.5,  0.5)
 
-    const balls = [
-      { pos: new THREE.Vector2( 0.3,  0.3), vel: new THREE.Vector2( 0.1,  0.2) },
-      { pos: new THREE.Vector2( 0.0,  0.3), vel: new THREE.Vector2( 0.1, -0.2) },
-      { pos: new THREE.Vector2(-0.2,  0.3), vel: new THREE.Vector2(-0.3, -0.1) },
-      { pos: new THREE.Vector2( 0.1, -0.2), vel: new THREE.Vector2(-0.5,  0.3) },
-    ]
+    const minSpawnDist = 0.8
+
+    function randomPos() {
+        return new THREE.Vector2(
+            (Math.random() - 0.5) * aspect,
+            (Math.random() - 1.0)
+        )
+    }
+
+    const balls = []
+
+    function spawnBall() {
+        let pos
+        do {
+            pos = randomPos()
+        } while (balls.some(b => b.pos.distanceTo(pos) < minSpawnDist))
+        return pos
+    }
+
+    balls.push({ pos: spawnBall(), vel: new THREE.Vector2( 0.02,  0.04) })
+    balls.push({ pos: spawnBall(), vel: new THREE.Vector2( 0.02, -0.04) })
+    balls.push({ pos: spawnBall(), vel: new THREE.Vector2(-0.06, -0.02) })
+    balls.push({ pos: spawnBall(), vel: new THREE.Vector2(-0.10,  0.06) })
 
     const material = new THREE.ShaderMaterial({
       uniforms: {
@@ -84,11 +101,11 @@ export default function ShaderBackground() {
         }
 
         float map(vec3 p) {
-            float s1 = sdfSphere(p, vec3(uBall1Pos, 0.0), 0.3);
-            float s2 = sdfSphere(p, vec3(uBall2Pos, 0.0), 0.25);
-            float s3 = sdfSphere(p, vec3(uBall3Pos, 0.0), 0.2);
-            float s4 = sdfSphere(p, vec3(uBall4Pos, 0.0), 0.4);
-            return smin(smin(s1, s2, 0.05), smin(s3, s4, 0.05), 0.05);
+            float s1 = sdfSphere(p, vec3(uBall1Pos, 0.0), 0.20);
+            float s2 = sdfSphere(p, vec3(uBall2Pos, 0.0), 0.40);
+            float s3 = sdfSphere(p, vec3(uBall3Pos, 0.0), 0.32);
+            float s4 = sdfSphere(p, vec3(uBall4Pos, 0.0), 0.25);
+            return smin(smin(s1, s2, 0.03), smin(s3, s4, 0.03), 0.03);
         }
 
         void main() {
@@ -104,8 +121,12 @@ export default function ShaderBackground() {
             vec3 bg_col = vec3(0.1, 0.1, 0.1);
             vec3 col = bg_col;
             if (d < 0.0) {
+                float t = clamp(-d / 0.2, 0.0, 1.0);
+                t = smoothstep(0.0, 1.0, t);
+                t = pow(t, 1.5);
+                col = mix(vec3(0.7, 0.35, 0.0), vec3(0.95, 0.45, 0.0), t);
                 float edge = smoothstep(0.0, 0.01, -d);
-                col = mix(bg_col, vec3(1.0, 0.5, 0.0), edge);
+                col = mix(bg_col, col, edge);
             }
 
             if (uv.y > 0.5 || uv.y < -0.5 || uv.x < -aspect * 0.5 || uv.x > aspect * 0.5) {
@@ -127,30 +148,54 @@ export default function ShaderBackground() {
     }
     window.addEventListener('mousemove', onMouseMove)
 
-    const dt = 1 / 240
+    const dt = 1 / 320
     let animId
 
     const animate = () => {
-      animId = requestAnimationFrame(animate)
+    animId = requestAnimationFrame(animate)
 
-      for (const ball of balls) {
+    for (const ball of balls) {
         const toMouse = material.uniforms.uMouse.value.clone().sub(ball.pos)
-        ball.vel.addScaledVector(toMouse, 0.75 * dt)
+        ball.vel.addScaledVector(toMouse, 0.75 * dt * (Math.random() - 0.25))
+
+        // find closest neighbor
+        let closestDist = 999.9
+        let closestBall = null
+        for (const neighbor of balls) {
+            if (neighbor !== ball) {
+                const dist = ball.pos.distanceTo(neighbor.pos)
+                if (dist < closestDist) {
+                closestDist = dist
+                closestBall = neighbor
+                }
+            }
+        }
+
+        const minDist = 0.5
+        if (closestDist < minDist && closestBall) {
+            const away = ball.pos.clone().sub(closestBall.pos).normalize()
+            const strength = (minDist - closestDist) / minDist
+            ball.vel.addScaledVector(away, 3.0 * strength)
+        }
+
         ball.pos.addScaledVector(ball.vel, dt)
 
-        if (ball.pos.x < minB.x || ball.pos.x > maxB.x) ball.vel.x *= -1.5 * Math.random()
-        if (ball.pos.y < minB.y || ball.pos.y > maxB.y) ball.vel.y *= -1.5 * Math.random()
+        if (ball.pos.x < minB.x || ball.pos.x > maxB.x) ball.vel.x *= -1
+        if (ball.pos.y < minB.y || ball.pos.y > maxB.y) ball.vel.y *= -1
         ball.pos.clamp(minB, maxB)
 
-        if (ball.vel.length() > 1.0) ball.vel.normalize()
-      }
+        const maxSpeed = 0.3
+        if (ball.vel.length() > maxSpeed) {
+            ball.vel.normalize().multiplyScalar(maxSpeed)
+        }
+    }
 
-      material.uniforms.uBall1Pos.value.copy(balls[0].pos)
-      material.uniforms.uBall2Pos.value.copy(balls[1].pos)
-      material.uniforms.uBall3Pos.value.copy(balls[2].pos)
-      material.uniforms.uBall4Pos.value.copy(balls[3].pos)
-      material.uniforms.uTime.value += dt
-      composer.render();
+    material.uniforms.uBall1Pos.value.copy(balls[0].pos)
+    material.uniforms.uBall2Pos.value.copy(balls[1].pos)
+    material.uniforms.uBall3Pos.value.copy(balls[2].pos)
+    material.uniforms.uBall4Pos.value.copy(balls[3].pos)
+    material.uniforms.uTime.value += dt
+    composer.render()
     }
     animate()
 
