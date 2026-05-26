@@ -3,6 +3,24 @@
   --text: #000000;
 }
 
+.ascii {
+  margin-top: 0;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+  font-family: 'Terminal', Courier;
+}
+
+.ascii pre {
+  font-weight: bolder;
+  color: white;
+  text-shadow:
+    0.3px 0 0 currentColor,
+    -0.3px 0 0 currentColor,
+    0 0.3px 0 currentColor,
+    0 -0.3px 0 currentColor;
+}
+
 .home {
   position: fixed;
   inset: 0;
@@ -27,4 +45,8 @@
 .body {
   color: black;
   font-family: 'Courier New', Courier, monospace;
+}
+
+test {
+  color:#ecc229
 }
