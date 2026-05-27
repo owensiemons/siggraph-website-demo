@@ -1,242 +1,52 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap');
-
 :root {
-  --bg: #05080f;
-  --accent: #00f0ff;
-  --accent-dim: rgba(0, 240, 255, 0.3);
-  --text: #e8f4ff;
-  --text-muted: rgba(200, 220, 240, 0.55);
-  --card-bg: rgba(5, 10, 20, 0.72);
-  --card-border: rgba(0, 240, 255, 0.15);
-  --font-display: 'Orbitron', sans-serif;
-  --font-mono: 'DM Mono', monospace;
+  --bg: #ffffff;
+  --text: #000000;
 }
 
-/* ── Full-screen canvas container, no scroll ── */
+.ascii {
+  margin-top: 0;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+  font-family: 'Terminal', Courier;
+}
+
+.ascii pre {
+  font-weight: bolder;
+  color: white;
+  text-shadow:
+    0.3px 0 0 currentColor,
+    -0.3px 0 0 currentColor,
+    0 0.3px 0 currentColor,
+    0 -0.3px 0 currentColor;
+}
+
 .home {
   position: fixed;
   inset: 0;
   background: var(--bg);
-  overflow: hidden;
+  color: black;
+  font-family: 'Times New Roman', Times, serif;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
-  justify-content: center;
+  flex-wrap: wrap;
 }
 
-/* subtle radial glow */
-.home::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(0, 240, 255, 0.055) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
+.fauxllini_blue {
+  color:#1e3f79
 }
 
-/* ── Hero text block ── */
-.hero__content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  /* push it to upper-center */
-  margin-bottom: auto;
-  padding-top: clamp(5rem, 18vh, 12rem);
+.fauxllini_orange {
+  color:#c07d19
 }
 
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(0, 240, 255, 0.5);
-  margin: 0;
+.body {
+  color: black;
+  font-family: 'Courier New', Courier, monospace;
 }
 
-.hero__title {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: clamp(3.5rem, 10vw, 8rem);
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--text);
-  margin: 0;
-  opacity: 0;
-}
-
-.accent {
-  color: var(--accent);
-  text-shadow:
-    0 0 28px rgba(0, 240, 255, 0.55),
-    0 0 70px rgba(0, 240, 255, 0.18);
-}
-
-.hero__sub {
-  font-family: var(--font-mono);
-  font-weight: 300;
-  font-size: clamp(0.72rem, 1.5vw, 0.95rem);
-  line-height: 1.8;
-  color: var(--text-muted);
-  margin: 0;
-  opacity: 0;
-}
-
-.hero__buttons {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.4rem;
-  opacity: 0;
-}
-
-/* ── Buttons ── */
-.btn {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  padding: 0.65rem 1.8rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.22s ease;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.btn--primary {
-  background: var(--accent);
-  color: var(--bg);
-  clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
-}
-.btn--primary:hover {
-  background: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 0 28px rgba(0, 240, 255, 0.45);
-}
-
-.btn--ghost {
-  background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent-dim);
-  clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
-}
-.btn--ghost:hover {
-  background: rgba(0, 240, 255, 0.07);
-  border-color: var(--accent);
-  transform: translateY(-2px);
-}
-
-/* ── Floating cards row ── */
-.cards {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  width: min(900px, 90vw);
-  /* pin to bottom with breathing room */
-  margin-top: auto;
-  margin-bottom: clamp(1.5rem, 4vh, 3rem);
-  opacity: 0;
-}
-
-.card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  padding: 1.6rem 1.8rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  /* subtle corner clip for style consistency */
-  clip-path: polygon(12px 0%, 100% 0%, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0% 100%, 0% 12px);
-}
-
-.card__label {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  color: var(--accent-dim);
-  margin: 0;
-}
-
-.card__heading {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0;
-  letter-spacing: 0.06em;
-}
-
-/* ── Meeting slots ── */
-.meeting-slot {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 0.7rem 0.9rem;
-  border: 1px solid rgba(0, 240, 255, 0.08);
-  background: rgba(0, 240, 255, 0.02);
-}
-
-.meeting-slot__day {
-  font-family: var(--font-display);
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--accent);
-  text-transform: uppercase;
-  min-width: 2.2rem;
-  padding-top: 2px;
-}
-
-.meeting-slot__details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.meeting-slot__time {
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  color: var(--text);
-}
-
-.meeting-slot__loc {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-.meetings__note {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  line-height: 1.6;
-  color: var(--text-muted);
-  margin: 0;
-  border-left: 2px solid var(--accent-dim);
-  padding-left: 0.8rem;
-}
-
-/* ── Discord ── */
-.discord-blurb {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  line-height: 1.7;
-  color: var(--text-muted);
-  margin: 0;
-  flex: 1;
-}
-
-
-
-/* ── Responsive ── */
-@media (max-width: 640px) {
-  .cards {
-    grid-template-columns: 1fr;
-  }
+test {
+  color:#ecc229
 }
